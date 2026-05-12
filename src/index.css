@@ -1,1 +1,51 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --color-clinical-blue: #1d4ed8;
+  --color-clinical-blue-soft: #eff6ff;
+  --color-success-soft: #ecfdf5;
+  --color-success-border: #a7f3d0;
+  --color-disease-soft: #fef2f2;
+  --color-disease-border: #fecaca;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    @apply antialiased text-slate-800 bg-slate-50;
+  }
+}
+
+@keyframes qp-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-qp-enter {
+  animation: qp-enter 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.6) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.55);
+  border-radius: 9999px;
+}

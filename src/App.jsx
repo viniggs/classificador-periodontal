@@ -1,5 +1,9 @@
-import React, { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import html2canvas from "html2canvas";
+import ClassifierHeader from "./components/ClassifierHeader.jsx";
+import FinishedResultView from "./components/FinishedResultView.jsx";
+import HistoryAndMetricsPanel from "./components/HistoryAndMetricsPanel.jsx";
+import ProgressNavigation from "./components/ProgressNavigation.jsx";
 
 export default function PeriodontalClassifier() {
   const STAGE_NAMES = {
@@ -159,6 +163,23 @@ export default function PeriodontalClassifier() {
     C: 3,
   };
 
+  // Novo: steps para progresso
+  const steps = useMemo(() => [
+    { id: 0, title: "Identificação do Caso", mode: "caseName", questionIndex: 0 },
+    { id: 1, title: "Diagnóstico Supragengival", mode: "supragingival", questionIndex: 0 },
+    { id: 2, title: "Perda de Inserção Interproximal", mode: "stage", questionIndex: 0 },
+    { id: 3, title: "Perda Óssea Radiográfica", mode: "stage", questionIndex: 1 },
+    { id: 4, title: "Perda Dentária por Periodontite", mode: "stage", questionIndex: 2 },
+    { id: 5, title: "Complexidade do Caso", mode: "stage", questionIndex: 3 },
+    { id: 6, title: "Extensão e Distribuição", mode: "stage", questionIndex: 4 },
+    { id: 7, title: "Evidência Direta de Progressão", mode: "grade", questionIndex: 0 },
+    { id: 8, title: "% Perda Óssea / Idade", mode: "grade", questionIndex: 1 },
+    { id: 9, title: "Fenótipo do Caso", mode: "grade", questionIndex: 2 },
+    { id: 10, title: "Tabagismo", mode: "grade", questionIndex: 3 },
+    { id: 11, title: "Diabetes", mode: "grade", questionIndex: 4 },
+    { id: 12, title: "Resultado Final", mode: "finished", questionIndex: 0 },
+  ], []);
+
   const [mode, setMode] = useState("caseName");
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [stage, setStage] = useState(0);
@@ -185,6 +206,23 @@ export default function PeriodontalClassifier() {
 
   const safeStage = STAGE_NAMES[stage] || "-";
 
+  // Novo: calcular progresso
+  const rawStepIndex = isFinished
+    ? steps.length - 1
+    : steps.findIndex(
+        (step) => step.mode === mode && step.questionIndex === currentQuestion
+      );
+  const currentStepIndex = rawStepIndex < 0 ? 0 : rawStepIndex;
+  const progressSteps = steps.map((step, index) => ({
+    ...step,
+    status:
+      index < currentStepIndex
+        ? "completed"
+        : index === currentStepIndex
+          ? "current"
+          : "future",
+  }));
+
   const resetFlow = () => {
     setMode("caseName");
     setCaseName("");
@@ -197,6 +235,19 @@ export default function PeriodontalClassifier() {
     setExtensionDescriptor("");
     setHasAttachmentLoss(false);
     setHasPeriodontitis(false);
+  };
+
+  // Novo: navegar para step
+  const navigateToStep = (step) => {
+    if (step.status === 'completed' || step.status === 'current') {
+      setMode(step.mode);
+      setCurrentQuestion(step.questionIndex);
+      if (step.mode === 'finished') {
+        setIsFinished(true);
+      } else {
+        setIsFinished(false);
+      }
+    }
   };
 
   const handleAnswer = (option) => {
@@ -341,354 +392,6 @@ export default function PeriodontalClassifier() {
     setIsFinished(true);
   };
 
-  // Mapa de cores Tailwind convertidas para RGB
-  const tailwindColors = {
-    "text-zinc-800": "rgb(24, 24, 27)",
-    "text-zinc-600": "rgb(82, 82, 91)",
-    "text-zinc-500": "rgb(113, 113, 122)",
-    "text-zinc-700": "rgb(63, 63, 70)",
-    "bg-zinc-100": "rgb(244, 244, 245)",
-    "bg-zinc-50": "rgb(250, 250, 250)",
-    "bg-white": "rgb(255, 255, 255)",
-    "bg-blue-600": "rgb(37, 99, 235)",
-    "bg-emerald-600": "rgb(5, 150, 105)",
-    "bg-emerald-700": "rgb(4, 120, 87)",
-    "text-blue-600": "rgb(37, 99, 235)",
-    "text-emerald-600": "rgb(5, 150, 105)",
-    "text-emerald-700": "rgb(5, 150, 105)",
-    "text-red-500": "rgb(239, 68, 68)",
-    "border-zinc-200": "rgb(228, 228, 231)",
-    "border-zinc-300": "rgb(212, 212, 216)",
-  };
-
-  // CSS completo para preservar formatação
-  const exportCss = `
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    div {
-      display: block;
-    }
-    
-    .min-h-screen {
-      min-height: 100vh;
-    }
-    
-    .flex {
-      display: flex;
-    }
-    
-    .items-center {
-      align-items: center;
-    }
-    
-    .justify-center {
-      justify-content: center;
-    }
-    
-    .justify-between {
-      justify-content: space-between;
-    }
-    
-    .p-6 {
-      padding: 1.5rem;
-    }
-    
-    .p-8 {
-      padding: 2rem;
-    }
-    
-    .p-10 {
-      padding: 2.5rem;
-    }
-    
-    .p-5 {
-      padding: 1.25rem;
-    }
-    
-    .p-4 {
-      padding: 1rem;
-    }
-    
-    .px-5 {
-      padding-left: 1.25rem;
-      padding-right: 1.25rem;
-    }
-    
-    .py-3 {
-      padding-top: 0.75rem;
-      padding-bottom: 0.75rem;
-    }
-    
-    .py-12 {
-      padding-top: 3rem;
-      padding-bottom: 3rem;
-    }
-    
-    .px-6 {
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
-    }
-    
-    .py-3 {
-      padding-top: 0.75rem;
-      padding-bottom: 0.75rem;
-    }
-    
-    .gap-4 {
-      gap: 1rem;
-    }
-    
-    .gap-6 {
-      gap: 1.5rem;
-    }
-    
-    .space-y-8 > * + * {
-      margin-top: 2rem;
-    }
-    
-    .space-y-12 > * + * {
-      margin-top: 3rem;
-    }
-    
-    .space-y-5 > * + * {
-      margin-top: 1.25rem;
-    }
-    
-    .space-y-4 > * + * {
-      margin-top: 1rem;
-    }
-    
-    .space-y-3 > * + * {
-      margin-top: 0.75rem;
-    }
-    
-    .mb-10 {
-      margin-bottom: 2.5rem;
-    }
-    
-    .mb-8 {
-      margin-bottom: 2rem;
-    }
-    
-    .mb-1 {
-      margin-bottom: 0.25rem;
-    }
-    
-    .mb-3 {
-      margin-bottom: 0.75rem;
-    }
-    
-    .mb-4 {
-      margin-bottom: 1rem;
-    }
-    
-    .mt-8 {
-      margin-top: 2rem;
-    }
-    
-    .mt-2 {
-      margin-top: 0.5rem;
-    }
-    
-    .w-full {
-      width: 100%;
-    }
-    
-    .max-w-6xl {
-      max-width: 72rem;
-    }
-    
-    .max-w-3xl {
-      max-width: 48rem;
-    }
-    
-    .rounded-3xl {
-      border-radius: 1.5rem;
-    }
-    
-    .rounded-2xl {
-      border-radius: 1rem;
-    }
-    
-    .rounded-2xl {
-      border-radius: 1rem;
-    }
-    
-    .shadow-2xl {
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    }
-    
-    .shadow-xl {
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-    
-    .border {
-      border: 1px solid;
-    }
-    
-    .text-3xl {
-      font-size: 1.875rem;
-      line-height: 2.25rem;
-    }
-    
-    .text-2xl {
-      font-size: 1.5rem;
-      line-height: 2rem;
-    }
-    
-    .text-lg {
-      font-size: 1.125rem;
-      line-height: 1.75rem;
-    }
-    
-    .text-sm {
-      font-size: 0.875rem;
-      line-height: 1.25rem;
-    }
-    
-    .text-xs {
-      font-size: 0.75rem;
-      line-height: 1rem;
-    }
-    
-    .text-5xl {
-      font-size: 3rem;
-      line-height: 1;
-    }
-    
-    .font-black {
-      font-weight: 900;
-    }
-    
-    .font-bold {
-      font-weight: 700;
-    }
-    
-    .font-semibold {
-      font-weight: 600;
-    }
-    
-    .font-medium {
-      font-weight: 500;
-    }
-    
-    .uppercase {
-      text-transform: uppercase;
-    }
-    
-    .tracking-wide {
-      letter-spacing: 0.05em;
-    }
-    
-    .leading-relaxed {
-      line-height: 1.625;
-    }
-    
-    .grid {
-      display: grid;
-    }
-    
-    .grid-cols-1 {
-      grid-template-columns: repeat(1, minmax(0, 1fr));
-    }
-    
-    .lg\\:grid-cols-3 {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-    
-    .lg\\:col-span-2 {
-      grid-column: span 2 / span 2;
-    }
-    
-    .lg\\:flex-row {
-      flex-direction: row;
-    }
-    
-    .flex-wrap {
-      flex-wrap: wrap;
-    }
-    
-    .flex-col {
-      flex-direction: column;
-    }
-    
-    .sm\\:flex-row {
-      flex-direction: row;
-    }
-    
-    .text-left {
-      text-align: left;
-    }
-    
-    .text-center {
-      text-align: center;
-    }
-    
-    button {
-      cursor: pointer;
-      border: none;
-      font-family: inherit;
-    }
-    
-    button:hover {
-      opacity: 0.9;
-    }
-    
-    input {
-      font-family: inherit;
-    }
-    
-    input:focus {
-      outline: none;
-    }
-    
-    .flex.flex-col.items-center.justify-center {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      min-height: 100%;
-    }
-    
-    .flex.flex-col.items-center.justify-center.py-12 {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding-top: 3rem;
-      padding-bottom: 3rem;
-      min-height: auto;
-    }
-    
-    .flex.gap-4.justify-center {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-    }
-    
-    .flex.flex-col.gap-4.justify-center {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      justify-content: center;
-    }
-    
-    .flex.flex-col.sm\\:flex-row {
-      display: flex;
-      flex-direction: column;
-    }
-    
-    @media (min-width: 640px) {
-      .flex.flex-col.sm\\:flex-row {
-        flex-direction: row;
-      }
-    }
-  `;
-
   const exportResult = async () => {
     try {
       if (!screenRef.current) {
@@ -696,70 +399,62 @@ export default function PeriodontalClassifier() {
         return;
       }
 
-      // Criar um elemento clone para manipular sem afetar o original
-      const clonedElement = screenRef.current.cloneNode(true);
-      document.body.appendChild(clonedElement);
-      clonedElement.style.position = "absolute";
-      clonedElement.style.left = "-9999px";
-      clonedElement.style.top = "-9999px";
-
-      // REMOVER OS BOTÕES
-      const buttonContainer = clonedElement.querySelector(".flex.flex-col.sm\\:flex-row");
-      if (buttonContainer) {
-        buttonContainer.remove();
-      }
-
-      // REMOVER O BADGE "Classificando Grau"
-      const badges = clonedElement.querySelectorAll(".px-5.py-3.rounded-2xl.bg-zinc-100.border.border-zinc-200");
-      badges.forEach(badge => {
-        if (badge.textContent.includes("Classificando") || badge.textContent.includes("Diagnóstico") || badge.textContent.includes("Identificação") || badge.textContent.includes("Estágio")) {
-          badge.remove();
+      // Armazenar estilos originais antes de fazer qualquer mudança
+      const originalStyles = new Map();
+      const elementsWithGradients = screenRef.current.querySelectorAll("[class*='gradient']");
+      
+      elementsWithGradients.forEach(el => {
+        originalStyles.set(el, el.style.background);
+        // Converter gradientes para cores sólidas
+        if (el.classList.contains('from-blue-600') && el.classList.contains('to-blue-800')) {
+          el.style.background = 'rgb(37, 99, 235)';
+        } else if (el.classList.contains('from-blue-500') && el.classList.contains('to-blue-700')) {
+          el.style.background = 'rgb(59, 130, 246)';
+        } else if (el.classList.contains('from-blue-600') && el.classList.contains('to-blue-700')) {
+          el.style.background = 'rgb(37, 99, 235)';
+        } else if (el.classList.contains('from-slate-50') && el.classList.contains('to-blue-50')) {
+          el.style.background = 'rgb(248, 250, 252)';
+        } else if (el.classList.contains('from-blue-100') && el.classList.contains('to-blue-200')) {
+          el.style.background = 'rgb(219, 234, 254)';
+        } else if (el.classList.contains('from-emerald-400') && el.classList.contains('to-emerald-600')) {
+          el.style.background = 'rgb(52, 211, 153)';
+        } else if (el.classList.contains('from-green-400') && el.classList.contains('to-green-600')) {
+          el.style.background = 'rgb(74, 222, 128)';
+        } else if (
+          el.classList.contains('from-slate-900') &&
+          el.classList.contains('to-slate-950')
+        ) {
+          el.style.background = 'rgb(15, 23, 42)';
+        } else if (
+          el.classList.contains('from-blue-400') &&
+          el.classList.contains('to-emerald-400')
+        ) {
+          el.style.background = 'rgb(37, 99, 235)';
+        } else if (
+          el.classList.contains('from-emerald-600') &&
+          el.classList.contains('to-emerald-700')
+        ) {
+          el.style.background = 'rgb(5, 150, 105)';
+        } else {
+          el.style.background = '';
         }
       });
 
-      // Criar e injetar estilo CSS
-      const styleElement = document.createElement("style");
-      styleElement.textContent = exportCss;
-      clonedElement.insertBefore(styleElement, clonedElement.firstChild);
-
-      // Processar recursivamente todos os elementos
-      const processAllElements = (el) => {
-        if (el === styleElement) return; // Pular o style tag
-
-        // Pegar todas as classes
-        const classes = el.className.split(" ");
-
-        // Aplicar cores baseado nas classes
-        classes.forEach((className) => {
-          if (className.startsWith("text-")) {
-            const rgbColor = tailwindColors[className];
-            if (rgbColor) el.style.color = rgbColor;
-          }
-          if (className.startsWith("bg-")) {
-            const rgbBg = tailwindColors[className];
-            if (rgbBg) el.style.backgroundColor = rgbBg;
-          }
-          if (className.startsWith("border-")) {
-            const rgbBorder = tailwindColors[className];
-            if (rgbBorder) el.style.borderColor = rgbBorder;
-          }
-        });
-
-        // Processar filhos recursivamente
-        Array.from(el.children).forEach(processAllElements);
-      };
-
-      processAllElements(clonedElement);
-
-      const canvas = await html2canvas(clonedElement, {
+      // Capturar
+      const canvas = await html2canvas(screenRef.current, {
         scale: 2,
         logging: false,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: "#f4f4f5",
+        backgroundColor: null,
+        windowWidth: screenRef.current.scrollWidth,
+        windowHeight: screenRef.current.scrollHeight,
       });
 
-      document.body.removeChild(clonedElement);
+      // Restaurar os estilos originais
+      originalStyles.forEach((originalStyle, el) => {
+        el.style.background = originalStyle || '';
+      });
 
       const image = canvas.toDataURL("image/png");
 
@@ -776,210 +471,116 @@ export default function PeriodontalClassifier() {
   };
 
   return (
-    <div ref={screenRef} className="min-h-screen bg-zinc-100 flex items-center justify-center p-6">
-      <div className="w-full max-w-6xl bg-white rounded-3xl shadow-2xl p-8 space-y-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-black text-zinc-800">
-              Classificador Periodontal
-            </h1>
-          </div>
+    <div
+      ref={screenRef}
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/60 px-3 py-4 sm:px-5 sm:py-8 lg:flex lg:items-stretch lg:justify-center lg:py-10"
+    >
+      <div className="mx-auto w-full max-w-7xl overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.12)] ring-1 ring-slate-900/[0.04]">
+        <div className="flex flex-col lg:min-h-[min(100vh-4rem,920px)] lg:flex-row">
+          <ProgressNavigation
+            progressSteps={progressSteps}
+            currentStepIndex={currentStepIndex}
+            totalSteps={steps.length}
+            onNavigateToStep={navigateToStep}
+          />
 
-          <div className="px-5 py-3 rounded-2xl bg-zinc-100 border border-zinc-200 font-semibold text-zinc-700">
-            {mode === "caseName"
-              ? "Identificação do Caso"
-              : mode === "supragingival"
-              ? "Diagnóstico Supragengival"
-              : mode === "stage"
-              ? "Classificando Estágio"
-              : "Classificando Grau"}
-          </div>
-        </div>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <main className="flex-1 px-4 py-6 sm:px-7 sm:py-8 lg:px-10 lg:py-10">
+              <ClassifierHeader mode={isFinished ? "finished" : mode} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-zinc-50 border border-zinc-200 rounded-3xl p-6">
-            {!isFinished ? (
-              <>
-                <div className="text-sm text-zinc-500 mb-1">
-                  {mode === "caseName"
-                    ? "Identificação do caso"
-                    : mode === "supragingival"
-                    ? "Diagnóstico supragengival"
-                    : mode === "stage"
-                    ? `Estágio - Pergunta ${currentQuestion + 1} de ${questions.length}`
-                    : `Grau - Pergunta ${currentQuestion + 1} de ${questions.length}`}
-                </div>
-
-                <h2 className="text-2xl font-bold text-zinc-800 mb-8">
-                  {mode === "caseName"
-                    ? "Digite o número/nome do caso"
-                    : questions[currentQuestion].title}
-                </h2>
-
-                {mode === "caseName" ? (
-                  <div className="space-y-5">
-                    <input
-                      type="text"
-                      value={caseName}
-                      onChange={(e) => setCaseName(e.target.value)}
-                      placeholder="Ex: Caso 3 / João da Silva"
-                      className="w-full rounded-2xl border border-zinc-300 bg-white p-5 text-lg outline-none focus:border-blue-500"
-                    />
-
-                    <button
-                      onClick={() => {
-                        setMode("supragingival");
-                        setCurrentQuestion(0);
-                      }}
-                      disabled={!caseName.trim()}
-                      className="w-full rounded-2xl bg-blue-600 p-5 text-lg font-bold text-white transition hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      Iniciar classificação
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {questions[currentQuestion].options.map((option) => (
-                      <button
-                        key={option.label}
-                        onClick={() => handleAnswer(option)}
-                        className="w-full rounded-2xl border border-zinc-300 bg-white p-5 text-left transition hover:border-blue-500 hover:bg-blue-50"
-                      >
-                        <div className="font-medium text-zinc-800">
-                          {option.label}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div
-                  ref={resultRef}
-                  className="w-full max-w-3xl rounded-3xl border border-zinc-200 bg-white p-10 shadow-xl"
-                >
-                  <div className="text-zinc-600 text-3xl font-black mb-10">
-                    ({caseName}) - Resultado final:
-                  </div>
-
-                  <div className="space-y-12 text-left">
-                    <div>
-                      <div className="text-lg font-black uppercase tracking-wide text-zinc-600 mb-1">
-                        Diagnóstico Supragengival:
-                      </div>
-
-                      <div
-                        className={`text-3xl font-black leading-relaxed ${
-                          supragingivalDiagnosis === "Paciente saudável"
-                            ? "text-emerald-700"
-                            : "text-red-500"
-                        }`}
-                      >
-                        {supragingivalDiagnosis}
-                        {hasAttachmentLoss &&
-                        supragingivalDiagnosis !== "Paciente saudável"
-                          ? " em periodonto reduzido"
-                          : ""}
-                      </div>
+              <div className="rounded-3xl border border-slate-200/90 bg-gradient-to-br from-slate-50/90 via-white to-blue-50/25 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] ring-1 ring-slate-900/[0.03] sm:p-7 lg:p-8">
+                {!isFinished ? (
+                  <>
+                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      {mode === "caseName"
+                        ? "Identificação do caso"
+                        : mode === "supragingival"
+                          ? "Diagnóstico supragengival"
+                          : mode === "stage"
+                            ? `Estágio — pergunta ${currentQuestion + 1} de ${questions.length}`
+                            : `Grau — pergunta ${currentQuestion + 1} de ${questions.length}`}
                     </div>
 
-                    <div>
-                      <div className="text-lg font-black uppercase tracking-wide text-zinc-600 mb-1">
-                        Diagnóstico Final (sub):
-                      </div>
+                    <div
+                      key={`${mode}-${currentQuestion}`}
+                      className="animate-qp-enter"
+                    >
+                      <h2 className="mt-3 text-balance text-2xl font-bold leading-tight text-slate-900 sm:text-3xl">
+                        {mode === "caseName"
+                          ? "Digite o número ou nome do caso"
+                          : questions[currentQuestion].title}
+                      </h2>
 
-                      {hasPeriodontitis ? (
-                        <div className="text-3xl font-black text-red-500 leading-relaxed">
-                          Periodontite estágio {safeStage} ({extensionDescriptor.toLowerCase()}) - Grau {grade}
+                      {mode === "caseName" ? (
+                        <div className="mt-8 space-y-5">
+                          <label className="sr-only" htmlFor="case-name-input">
+                            Nome ou número do caso
+                          </label>
+                          <input
+                            id="case-name-input"
+                            type="text"
+                            value={caseName}
+                            onChange={(e) => setCaseName(e.target.value)}
+                            placeholder="Ex.: Caso 3 / João da Silva"
+                            autoComplete="off"
+                            className="w-full min-h-[52px] rounded-2xl border border-slate-200 bg-white px-5 py-4 text-base text-slate-900 shadow-sm outline-none ring-0 transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:shadow-[0_0_0_4px_rgba(59,130,246,0.15)] sm:text-lg"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMode("supragingival");
+                              setCurrentQuestion(0);
+                            }}
+                            disabled={!caseName.trim()}
+                            className="flex w-full min-h-[52px] items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-blue-800 px-5 py-4 text-base font-bold text-white shadow-md transition-all duration-200 hover:from-blue-700 hover:to-blue-900 hover:shadow-lg active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45 sm:text-lg"
+                          >
+                            Iniciar classificação
+                          </button>
                         </div>
                       ) : (
-                        <div className="text-3xl font-black text-emerald-700 leading-relaxed">
-                          Periodonto saudável
+                        <div className="mt-6 space-y-3 sm:mt-8 sm:space-y-3.5">
+                          {questions[currentQuestion].options.map((option) => (
+                            <button
+                              type="button"
+                              key={option.label}
+                              onClick={() => handleAnswer(option)}
+                              className="group flex w-full min-h-[52px] items-start rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50/60 hover:shadow-md active:scale-[0.99] sm:min-h-[56px] sm:px-6 sm:py-5"
+                            >
+                              <span className="mt-0.5 mr-3 hidden h-2.5 w-2.5 shrink-0 rounded-full bg-blue-600 opacity-0 transition-opacity group-hover:opacity-100 sm:block" />
+                              <span className="text-base font-semibold leading-snug text-slate-800 transition-colors group-hover:text-blue-900 sm:text-lg">
+                                {option.label}
+                              </span>
+                            </button>
+                          ))}
                         </div>
                       )}
                     </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-                  <button
-                    onClick={exportResult}
-                    className="px-6 py-3 rounded-2xl bg-emerald-600 text-white font-semibold transition hover:bg-emerald-700"
-                  >
-                    Exportar resposta
-                  </button>
-
-                  <button
-                    onClick={resetFlow}
-                    className="px-6 py-3 rounded-2xl bg-blue-600 text-white font-semibold transition hover:bg-blue-700"
-                  >
-                    Fazer nova classificação
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="bg-zinc-50 border border-zinc-200 rounded-3xl p-6">
-            <h3 className="text-xl font-bold text-zinc-800 mb-1">
-              Progressão Atual
-            </h3>
-
-            <div className="space-y-5 mb-8">
-              <div>
-                <div className="text-sm text-zinc-500 mb-1">Estágio</div>
-
-                <div className="text-5xl font-black text-blue-600">
-                  {safeStage}
-                </div>
+                  </>
+                ) : (
+                  <FinishedResultView
+                    resultRef={resultRef}
+                    caseName={caseName}
+                    supragingivalDiagnosis={supragingivalDiagnosis}
+                    hasAttachmentLoss={hasAttachmentLoss}
+                    hasPeriodontitis={hasPeriodontitis}
+                    safeStage={safeStage}
+                    extensionDescriptor={extensionDescriptor}
+                    grade={grade}
+                    onExport={exportResult}
+                    onReset={resetFlow}
+                  />
+                )}
               </div>
 
-              <div>
-                <div className="text-sm text-zinc-500 mb-1">Grau</div>
-
-                <div className="text-5xl font-black text-emerald-600">
-                  {grade}
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <h4 className="font-semibold text-zinc-700">Histórico</h4>
-
-              {history.length === 0 ? (
-                <div className="text-sm text-zinc-500">
-                  Nenhuma resposta registrada ainda.
-                </div>
-              ) : (
-                history.map((item, index) => (
-                  <div
-                    key={`${item.question}-${index}`}
-                    className="bg-white border border-zinc-200 rounded-2xl p-4"
-                  >
-                    <div className="font-semibold text-zinc-800 mb-1">
-                      {item.question}
-                    </div>
-
-                    <div className="text-sm text-zinc-500 mb-3">
-                      {item.answer}
-                    </div>
-
-                    <div className="font-bold text-blue-600">
-                      {item.previous !== item.updated
-                        ? `${item.previous} -> ${item.updated}`
-                        : `Mantém ${item.updated}`}
-                    </div>
-
-                    {item.changed && (
-                      <div className="mt-2 text-xs font-semibold text-emerald-600">
-                        Gravidade aumentada neste critério
-                      </div>
-                    )}
-                  </div>
-                ))
+              {!isFinished && (
+                <HistoryAndMetricsPanel
+                  safeStage={safeStage}
+                  grade={grade}
+                  history={history}
+                />
               )}
-            </div>
+            </main>
           </div>
         </div>
       </div>
