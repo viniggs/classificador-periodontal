@@ -257,7 +257,7 @@ export default function PeriodontalClassifier() {
       className="min-h-screen bg-blue-200/90 px-3 py-4 sm:px-5 sm:py-8 lg:flex lg:items-stretch lg:justify-center lg:py-10"
     >
       <div className="mx-auto w-full max-w-7xl overflow-hidden rounded-[28px] border border-slate-200/90 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.12)] ring-1 ring-slate-900/[0.04]">
-        <div className="flex flex-col lg:min-h-[min(100vh-4rem,920px)] lg:flex-row">
+        <div className="flex flex-col lg:min-h-[calc(100vh-5rem)] lg:flex-row">
           <ProgressNavigation
             progressSteps={progressSteps}
             currentStepIndex={currentStepIndex}

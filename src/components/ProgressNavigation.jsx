@@ -143,7 +143,7 @@ export default function ProgressNavigation({
         </div>
 
         <nav
-          className="relative mt-6 flex max-h-[min(70vh,640px)] flex-col gap-1.5 overflow-y-auto pr-1 scrollbar-thin"
+          className="relative mt-6 flex flex-1 flex-col gap-1.5 overflow-y-auto pr-1 scrollbar-thin"
           aria-label="Etapas do classificador"
         >
           {progressSteps.map((step, index) => (
