@@ -254,9 +254,9 @@ export default function PeriodontalClassifier() {
   return (
     <div
       ref={screenRef}
-      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/60 px-3 py-4 sm:px-5 sm:py-8 lg:flex lg:items-stretch lg:justify-center lg:py-10"
+      className="min-h-screen bg-blue-200/90 px-3 py-4 sm:px-5 sm:py-8 lg:flex lg:items-stretch lg:justify-center lg:py-10"
     >
-      <div className="mx-auto w-full max-w-7xl overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.12)] ring-1 ring-slate-900/[0.04]">
+      <div className="mx-auto w-full max-w-7xl overflow-hidden rounded-[28px] border border-slate-200/90 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.12)] ring-1 ring-slate-900/[0.04]">
         <div className="flex flex-col lg:min-h-[min(100vh-4rem,920px)] lg:flex-row">
           <ProgressNavigation
             progressSteps={progressSteps}
@@ -265,14 +265,22 @@ export default function PeriodontalClassifier() {
             onNavigateToStep={navigateToStep}
           />
 
-          <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex min-w-0 flex-1 flex-col bg-slate-50">
             <main className="flex-1 px-4 py-6 sm:px-7 sm:py-8 lg:px-10 lg:py-10">
               <ClassifierHeader mode={isFinished ? "finished" : mode} />
 
-              <div className="rounded-3xl border border-slate-200/90 bg-gradient-to-br from-slate-50/90 via-white to-blue-50/25 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] ring-1 ring-slate-900/[0.03] sm:p-7 lg:p-8">
+              <div
+                className={
+                  isFinished
+                    ? "rounded-3xl border border-slate-300/90 bg-slate-50 p-5 shadow-[0_4px_20px_rgba(15,23,42,0.07)] ring-1 ring-slate-900/[0.06] sm:p-7 lg:p-8"
+                    : mode === "caseName"
+                      ? "rounded-3xl border border-slate-300/90 bg-slate-50 p-5 shadow-[0_4px_20px_rgba(15,23,42,0.07)] ring-1 ring-slate-900/[0.06] sm:p-7 lg:p-8"
+                      : "rounded-3xl border border-blue-300/90 bg-blue-200/90 p-5 shadow-[0_4px_20px_rgba(30,58,138,0.12)] ring-1 ring-blue-900/10 sm:p-7 lg:p-8"
+                }
+              >
                 {!isFinished ? (
                   <>
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
                       {mode === "caseName"
                         ? "Identificação do caso"
                         : mode === "supragingival"
@@ -304,7 +312,7 @@ export default function PeriodontalClassifier() {
                             onChange={(e) => setCaseName(e.target.value)}
                             placeholder="Ex.: Caso 3 / João da Silva"
                             autoComplete="off"
-                            className="w-full min-h-[52px] rounded-2xl border border-slate-200 bg-white px-5 py-4 text-base text-slate-900 shadow-sm outline-none ring-0 transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:shadow-[0_0_0_4px_rgba(59,130,246,0.15)] sm:text-lg"
+                            className="w-full min-h-[52px] rounded-2xl border border-slate-300 bg-white px-5 py-4 text-base text-slate-900 shadow-[0_1px_3px_rgba(15,23,42,0.08)] outline-none ring-0 transition-all duration-200 placeholder:text-slate-500 focus:border-blue-600 focus:bg-white focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] sm:text-lg"
                           />
 
                           <button
@@ -326,10 +334,10 @@ export default function PeriodontalClassifier() {
                               type="button"
                               key={option.label}
                               onClick={() => handleAnswer(option)}
-                              className="group flex w-full min-h-[52px] items-start rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50/60 hover:shadow-md active:scale-[0.99] sm:min-h-[56px] sm:px-6 sm:py-5"
+                              className="group flex w-full min-h-[52px] items-start rounded-2xl border border-slate-300 bg-white px-5 py-4 text-left shadow-[0_1px_3px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-400 hover:bg-blue-200/50 hover:shadow-[0_4px_14px_rgba(37,99,235,0.15)] active:scale-[0.99] sm:min-h-[56px] sm:px-6 sm:py-5"
                             >
-                              <span className="mt-0.5 mr-3 hidden h-2.5 w-2.5 shrink-0 rounded-full bg-blue-600 opacity-0 transition-opacity group-hover:opacity-100 sm:block" />
-                              <span className="text-base font-semibold leading-snug text-slate-800 transition-colors group-hover:text-blue-900 sm:text-lg">
+                              <span className="mt-1 mr-3 hidden h-2 w-2 shrink-0 rounded-full border border-slate-400 bg-slate-200 transition-all group-hover:border-blue-500 group-hover:bg-blue-600 sm:block" />
+                              <span className="text-base font-semibold leading-snug text-slate-900 transition-colors group-hover:text-blue-950 sm:text-lg">
                                 {option.label}
                               </span>
                             </button>

@@ -21,10 +21,10 @@ export default function ClassifierHeader({ mode }) {
           histórico e exportação do resultado.
         </p>
       </div>
-      <div className="inline-flex shrink-0 items-center gap-2 self-start rounded-2xl border border-slate-200/90 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm ring-1 ring-slate-900/[0.04] sm:self-auto">
+      <div className="inline-flex shrink-0 items-center gap-2 self-start rounded-2xl border border-blue-300/90 bg-blue-200/90 px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-blue-900/10 sm:self-auto">
         <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-40" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-600" />
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-600 opacity-35" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-800" />
         </span>
         {MODE_LABELS[mode] ?? MODE_LABELS.caseName}
       </div>
