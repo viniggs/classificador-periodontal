@@ -1,185 +1,22 @@
-import { useMemo, useRef, useState } from "react";
-import html2canvas from "html2canvas";
+import { useRef, useState } from "react";
 import ClassifierHeader from "./components/ClassifierHeader.jsx";
 import FinishedResultView from "./components/FinishedResultView.jsx";
 import HistoryAndMetricsPanel from "./components/HistoryAndMetricsPanel.jsx";
 import ProgressNavigation from "./components/ProgressNavigation.jsx";
+import {
+  gradePriority,
+  gradeQuestions,
+  STAGE_NAMES,
+  stageQuestions,
+  steps,
+  supragingivalQuestion,
+} from "./constants/classifierData.js";
+import {
+  captureNodeToPngDataUrl,
+  downloadDataUrl,
+} from "./utils/exportScreenshot.js";
 
 export default function PeriodontalClassifier() {
-  const STAGE_NAMES = {
-    1: "I",
-    2: "II",
-    3: "III",
-    4: "IV",
-  };
-
-  const supragingivalQuestion = {
-    id: 0,
-    title: "Diagnóstico supragengival",
-    options: [
-      {
-        label: "ISG menor que 10%",
-        diagnosis: "Paciente saudável",
-      },
-      {
-        label: "ISG entre 10% e 30%",
-        diagnosis: "Gengivite localizada",
-      },
-      {
-        label: "ISG maior que 30%",
-        diagnosis: "Gengivite generalizada",
-      },
-    ],
-  };
-
-  const stageQuestions = useMemo(
-    () => [
-      {
-        id: 1,
-        title: "MAIOR perda de inserção interproximal (PI)",
-        options: [
-          { label: "Sem perda de inserção", value: 0 },
-          { label: "1-2 mm", value: 1 },
-          { label: "3-4 mm", value: 2 },
-          { label: "5 mm ou mais", value: 3 },
-        ],
-      },
-      {
-        id: 2,
-        title: "Perda óssea radiográfica",
-        options: [
-          { label: "Terço coronário (<15%)", value: 1 },
-          { label: "Terço coronário (15-33%)", value: 2 },
-          { label: "Terço médio da raiz e além", value: 3 },
-        ],
-      },
-      {
-        id: 3,
-        title: "Perda dentária por periodontite",
-        options: [
-          { label: "Nenhuma perda", value: 1 },
-          { label: "Até 4 dentes", value: 3 },
-          { label: "5 dentes ou mais", value: 4 },
-        ],
-      },
-      {
-        id: 4,
-        title: "Complexidade do caso",
-        options: [
-          { label: "Nenhuma complexidade importante", value: 1 },
-          { label: "PS máxima até 5 mm", value: 2 },
-          {
-            label:
-              "PS 6 mm ou mais, defeitos verticais ou furca classe II/III",
-            value: 3,
-          },
-          {
-            label:
-              "Colapso de mordida, menos de 10 pares oclusais ou reabilitação extensa",
-            value: 4,
-          },
-        ],
-      },
-      {
-        id: 5,
-        title: "Extensão e distribuição",
-        options: [
-          {
-            label: "Afeta apenas incisivos e molares",
-            descriptor: "Padrão incisivo-molar",
-          },
-          {
-            label: "Menos de 30% dos dentes envolvidos",
-            descriptor: "Localizada",
-          },
-          {
-            label: "Mais de 30% dos dentes envolvidos",
-            descriptor: "Generalizada",
-          },
-        ],
-      },
-    ],
-    []
-  );
-
-  const gradeQuestions = useMemo(
-    () => [
-      {
-        id: 1,
-        title: "Evidência direta de progressão",
-        options: [
-          {
-            label: "Histórico de exames ausente",
-            value: "NONE",
-          },
-          { label: "Sem PI em 5 anos", value: "A" },
-          { label: "PI Menor que 2 mm em 5 anos", value: "B" },
-          { label: "PI de 2 mm ou mais em 5 anos", value: "C" },
-        ],
-      },
-      {
-        id: 2,
-        title: "% perda óssea / idade",
-        options: [
-          { label: "Menor que 0,25", value: "A" },
-          { label: "0,25 até 1,0", value: "B" },
-          { label: "Maior que 1,0", value: "C" },
-        ],
-      },
-      {
-        id: 3,
-        title: "Fenótipo do caso",
-        options: [
-          { label: "Destruição lenta", value: "A" },
-          { label: "Compatível com biofilme", value: "B" },
-          { label: "Destruição excede biofilme", value: "C" },
-        ],
-      },
-      {
-        id: 4,
-        title: "Tabagismo",
-        options: [
-          { label: "Não fumante", value: "A" },
-          { label: "Menos de 10 cigarros/dia", value: "B" },
-          { label: "10 cigarros/dia ou mais", value: "C" },
-        ],
-      },
-      {
-        id: 5,
-        title: "Diabetes",
-        options: [
-          { label: "Sem diabetes", value: "A" },
-          { label: "HbA1c menor que 7%", value: "B" },
-          { label: "HbA1c 7% ou mais", value: "C" },
-        ],
-      },
-    ],
-    []
-  );
-
-  const gradePriority = {
-    A: 1,
-    B: 2,
-    C: 3,
-  };
-
-  // Novo: steps para progresso
-  const steps = useMemo(() => [
-    { id: 0, title: "Identificação do Caso", mode: "caseName", questionIndex: 0 },
-    { id: 1, title: "Diagnóstico Supragengival", mode: "supragingival", questionIndex: 0 },
-    { id: 2, title: "Perda de Inserção Interproximal", mode: "stage", questionIndex: 0 },
-    { id: 3, title: "Perda Óssea Radiográfica", mode: "stage", questionIndex: 1 },
-    { id: 4, title: "Perda Dentária por Periodontite", mode: "stage", questionIndex: 2 },
-    { id: 5, title: "Complexidade do Caso", mode: "stage", questionIndex: 3 },
-    { id: 6, title: "Extensão e Distribuição", mode: "stage", questionIndex: 4 },
-    { id: 7, title: "Evidência Direta de Progressão", mode: "grade", questionIndex: 0 },
-    { id: 8, title: "% Perda Óssea / Idade", mode: "grade", questionIndex: 1 },
-    { id: 9, title: "Fenótipo do Caso", mode: "grade", questionIndex: 2 },
-    { id: 10, title: "Tabagismo", mode: "grade", questionIndex: 3 },
-    { id: 11, title: "Diabetes", mode: "grade", questionIndex: 4 },
-    { id: 12, title: "Resultado Final", mode: "finished", questionIndex: 0 },
-  ], []);
-
   const [mode, setMode] = useState("caseName");
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [stage, setStage] = useState(0);
@@ -393,77 +230,21 @@ export default function PeriodontalClassifier() {
   };
 
   const exportResult = async () => {
+    const root = screenRef.current;
+    if (!root) {
+      alert("Não foi possível encontrar a tela para exportar.");
+      return;
+    }
+
     try {
-      if (!screenRef.current) {
-        alert("Não foi possível encontrar a tela para exportar.");
-        return;
-      }
-
-      // Armazenar estilos originais antes de fazer qualquer mudança
-      const originalStyles = new Map();
-      const elementsWithGradients = screenRef.current.querySelectorAll("[class*='gradient']");
-      
-      elementsWithGradients.forEach(el => {
-        originalStyles.set(el, el.style.background);
-        // Converter gradientes para cores sólidas
-        if (el.classList.contains('from-blue-600') && el.classList.contains('to-blue-800')) {
-          el.style.background = 'rgb(37, 99, 235)';
-        } else if (el.classList.contains('from-blue-500') && el.classList.contains('to-blue-700')) {
-          el.style.background = 'rgb(59, 130, 246)';
-        } else if (el.classList.contains('from-blue-600') && el.classList.contains('to-blue-700')) {
-          el.style.background = 'rgb(37, 99, 235)';
-        } else if (el.classList.contains('from-slate-50') && el.classList.contains('to-blue-50')) {
-          el.style.background = 'rgb(248, 250, 252)';
-        } else if (el.classList.contains('from-blue-100') && el.classList.contains('to-blue-200')) {
-          el.style.background = 'rgb(219, 234, 254)';
-        } else if (el.classList.contains('from-emerald-400') && el.classList.contains('to-emerald-600')) {
-          el.style.background = 'rgb(52, 211, 153)';
-        } else if (el.classList.contains('from-green-400') && el.classList.contains('to-green-600')) {
-          el.style.background = 'rgb(74, 222, 128)';
-        } else if (
-          el.classList.contains('from-slate-900') &&
-          el.classList.contains('to-slate-950')
-        ) {
-          el.style.background = 'rgb(15, 23, 42)';
-        } else if (
-          el.classList.contains('from-blue-400') &&
-          el.classList.contains('to-emerald-400')
-        ) {
-          el.style.background = 'rgb(37, 99, 235)';
-        } else if (
-          el.classList.contains('from-emerald-600') &&
-          el.classList.contains('to-emerald-700')
-        ) {
-          el.style.background = 'rgb(5, 150, 105)';
-        } else {
-          el.style.background = '';
-        }
-      });
-
-      // Capturar
-      const canvas = await html2canvas(screenRef.current, {
+      const dataUrl = await captureNodeToPngDataUrl(root, {
         scale: 2,
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
         backgroundColor: null,
-        windowWidth: screenRef.current.scrollWidth,
-        windowHeight: screenRef.current.scrollHeight,
       });
-
-      // Restaurar os estilos originais
-      originalStyles.forEach((originalStyle, el) => {
-        el.style.background = originalStyle || '';
-      });
-
-      const image = canvas.toDataURL("image/png");
-
-      const link = document.createElement("a");
-      link.download = `${caseName || "caso"}-resultado-periodontal.png`;
-      link.href = image;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      downloadDataUrl(
+        dataUrl,
+        `${caseName || "caso"}-resultado-periodontal.png`
+      );
     } catch (error) {
       console.error("Erro ao exportar imagem:", error);
       alert("Não foi possível exportar a imagem.");
